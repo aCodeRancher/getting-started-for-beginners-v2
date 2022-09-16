@@ -5,16 +5,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 class CourseJdbcRepositoryTest {
 
     @Mock
-    JdbcTemplate jdbcTemplate;
+    JdbcTemplate  springJdbcTemplate;
 
     @InjectMocks
     CourseJdbcRepository courseJdbcRepository;
@@ -25,30 +26,32 @@ class CourseJdbcRepositoryTest {
         course.setId(100);
         course.setName("Spring Boot 3");
         course.setAuthor("in28minutes");
-        String INSERT_QUERY =
 
-                """
-                    insert into course (id, name, author)
-                    values(?, ?,?);
-        
-                """;
-        when(jdbcTemplate.update(INSERT_QUERY,course.getId(), course.getName(), course.getAuthor())).thenReturn(1);
+        when(springJdbcTemplate.update(anyString(),anyLong(), anyString(),anyString())).thenReturn(1);
         courseJdbcRepository.insert(course);
-        verify(jdbcTemplate,times(1)).update(anyString(),any(),any(),any());
+        verify(springJdbcTemplate,times(1)).update(anyString(),any(),any(),any());
     }
 
     @Test
     public void deleteShouldSucceed(){
-        String DELETE_QUERY =
 
-                """
-                    delete from course
-                    where id = ?
-        
-                """;
-        when(jdbcTemplate.update(eq(DELETE_QUERY), anyLong())).thenReturn(1);
+        when(springJdbcTemplate.update(anyString(), anyLong())).thenReturn(1);
         courseJdbcRepository.deleteById(1L);
-        verify(jdbcTemplate,times(1)).update(anyString(),anyLong());
+        verify(springJdbcTemplate,times(1)).update(anyString(),anyLong());
     }
 
+    @Test
+    public void findShouldSucceed(){
+
+        Course jscourse = new Course();
+        jscourse.setId(10L);
+        jscourse.setName("Intro to Javascript");
+         when(springJdbcTemplate.queryForObject(anyString(),
+                any(BeanPropertyRowMapper.class), anyLong())).thenReturn(jscourse);
+
+       assertTrue(courseJdbcRepository.findById(10L).getName().equals("Intro to Javascript"));
+       verify(springJdbcTemplate,times(1))
+               .queryForObject(anyString(), any(BeanPropertyRowMapper.class), anyLong());
+
+    }
 }
