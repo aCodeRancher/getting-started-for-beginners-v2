@@ -1,0 +1,1 @@
+insert into course values(1, 'Intro to AWS', 'in28minutes');
